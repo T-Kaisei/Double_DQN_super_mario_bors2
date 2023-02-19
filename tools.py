@@ -7,6 +7,14 @@ from torchvision import transforms as T
 #openAI
 import gym
 from gym.spaces import Box
+# NES Emulator for OpenAI Gym
+from nes_py.wrappers import JoypadSpace
+# Mario Enviroment
+import gym_super_mario_bros
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
+# Edit picture
+from gym.wrappers import RecordVideo
+from gym.wrappers import FrameStack
 
 
 class SkipFrame(gym.Wrapper):
@@ -87,3 +95,45 @@ class Replaybuffer(object):
         batch = random.sample(self.buffer, self.batch_size)
         state, next_state, action, reward, done = map(torch.stack, zip(*batch))
         return state, next_state, action.squeeze(), reward.squeeze(), done.squeeze()
+
+# make stage
+def make_stage():
+    # All enviroment for experiment
+    stage1 = gym_super_mario_bros.make("SuperMarioBros-1-1-v0", new_step_api=True)
+    stage1 = JoypadSpace(stage1, SIMPLE_MOVEMENT)
+    stage1 = SkipFrame(stage1, skip=4)
+    stage1 = GrayScaleObservation(stage1)
+    stage1 = ResizeObservation(stage1, shape=84)
+    stage1 = FrameStack(stage1, num_stack=4)
+
+    stage2 = gym_super_mario_bros.make("SuperMarioBros-1-2-v0", new_step_api=True) 
+    stage2 = JoypadSpace(stage2, SIMPLE_MOVEMENT)
+    stage2 = SkipFrame(stage2, skip=4)
+    stage2 = GrayScaleObservation(stage2)
+    stage2 = ResizeObservation(stage2, shape=84)
+    stage2 = FrameStack(stage2, num_stack=4)
+
+    stage3= gym_super_mario_bros.make("SuperMarioBros-1-3-v0", new_step_api=True) 
+    stage3= JoypadSpace(stage3, SIMPLE_MOVEMENT)
+    stage3= SkipFrame(stage3, skip=4)
+    stage3= GrayScaleObservation(stage3)
+    stage3= ResizeObservation(stage3, shape=84)
+    stage3= FrameStack(stage3, num_stack=4)
+
+    stage4 = gym_super_mario_bros.make("SuperMarioBros-1-4-v0", new_step_api=True)
+    stage4 = JoypadSpace(stage4, SIMPLE_MOVEMENT)
+    stage4 = SkipFrame(stage4, skip=4)
+    stage4 = GrayScaleObservation(stage4)
+    stage4 = ResizeObservation(stage4, shape=84)
+    stage4 = FrameStack(stage4, num_stack=4)
+    
+    return stage1, stage2, stage3, stage4
+
+# set seed
+def set_seed(seed=50):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark=True
